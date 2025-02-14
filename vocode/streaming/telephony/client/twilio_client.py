@@ -47,15 +47,23 @@ class TwilioClient(AbstractTelephonyClient):
         telephony_params: Optional[Dict[str, str]] = None,
     ) -> str:
         data = {
-            "Twiml": self.get_connection_twiml(conversation_id=conversation_id).body.decode(
-                "utf-8"
-            ),
+            "Twiml": self.get_connection_twiml(conversation_id=conversation_id).body.decode("utf-8"),
             "To": f"+{to_phone}",
             "From": f"+{from_phone}",
             **(telephony_params or {}),
         }
+
         if digits:
             data["SendDigits"] = digits
+
+        if getattr(self.twilio_config, "answering_machine_detection", False) is True:
+            data["MachineDetection"] = "Enable"
+            data["MachineDetectionTimeout"] = "5"
+
+        if hasattr(self.twilio_config, "amd_webhook_url"):
+            data["StatusCallback"] = self.answering_machine_callback_url
+            data["StatusCallbackEvent"] = "answered completed"
+
         async with AsyncRequestor().get_session().post(
             f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls.json",
             auth=self.auth,
@@ -67,7 +75,7 @@ class TwilioClient(AbstractTelephonyClient):
                         f"Failed to create call: {response.status} {response.reason} {await response.json()}"
                     )
                     raise TwilioBadRequestException(
-                        "Telephony provider rejected call; this is usually due to a bad/malformed number. "
+                        "Telephony provider rejected call; this is usually due to a bad/malformed number."
                     )
                 else:
                     raise TwilioException(
