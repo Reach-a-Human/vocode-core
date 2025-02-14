@@ -60,7 +60,7 @@ class TwilioClient(AbstractTelephonyClient):
             data["MachineDetection"] = "Enable"
             data["MachineDetectionTimeout"] = "5"
 
-        if hasattr(self.twilio_config, "amd_webhook_url"):
+        if hasattr(self.twilio_config, "answering_machine_callback_url") is True:
             data["StatusCallback"] = self.answering_machine_callback_url
             data["StatusCallbackEvent"] = "answered completed"
 
