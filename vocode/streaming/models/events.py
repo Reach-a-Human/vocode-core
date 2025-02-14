@@ -21,6 +21,21 @@ class EventType(str, Enum):
     RECORDING = "event_recording"
     ACTION = "event_action"
 
+    ANSWERING_MACHINE_DETECTED = "answering_machine_detected"  # Voicemail detected
+    HUMAN_DETECTED = "human_detected"  # Live person detected
+    FAX_DETECTED = "fax_detected"  # Fax machine detected
+    UNKNOWN_DETECTED = "unknown_detected"  # Twilio couldn't determine
+
+    # General Call Status Events
+    CALL_INITIATED = "initiated"  # Call has been created but not yet ringing
+    CALL_RINGING = "ringing"  # Call is ringing
+    CALL_ANSWERED = "answered"  # Call was answered
+    CALL_COMPLETED = "completed"  # Call ended normally
+    CALL_BUSY = "busy"  # Call was rejected due to the line being busy
+    CALL_FAILED = "failed"  # Call failed to connect
+    CALL_NO_ANSWER = "no_answer"  # Call rang but was not answered
+    CALL_CANCELED = "canceled"  # Call was canceled before connecting
+
 
 class Event(TypedModel):
     conversation_id: str
