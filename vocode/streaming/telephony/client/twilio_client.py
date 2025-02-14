@@ -62,7 +62,7 @@ class TwilioClient(AbstractTelephonyClient):
 
         if hasattr(self.twilio_config, "answering_machine_callback_url") is True:
             data["StatusCallback"] = self.answering_machine_callback_url
-            data["StatusCallbackEvent"] = "answered completed"
+            data["StatusCallbackEvent"] = "answered"
 
         async with AsyncRequestor().get_session().post(
             f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls.json",
