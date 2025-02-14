@@ -10,7 +10,7 @@ class Sender(str, Enum):
     ACTION_WORKER = "action_worker"
     VECTOR_DB = "vector_db"
     CONFERENCE = "conference"
-
+    TWILO_AMD = "twilio_amd"
 
 class EventType(str, Enum):
     TRANSCRIPT = "event_transcript"
