@@ -28,7 +28,8 @@ class TwilioConfig(TelephonyProviderConfig):
     auth_token: str
     extra_params: Optional[Dict[str, Any]] = {}
     account_supports_any_caller_id: bool = True
-
+    answering_machine_detection: bool = False
+    answering_machine_callback_url: Optional[str] = None
 
 class VonageConfig(TelephonyProviderConfig):
     api_key: str
