@@ -57,12 +57,14 @@ class TwilioClient(AbstractTelephonyClient):
             data["SendDigits"] = digits
 
         if getattr(self.twilio_config, "answering_machine_detection", False) is True:
-            data["MachineDetection"] = "Enable"
+            data["MachineDetection"] = "DetectMessageEnd"
             data["MachineDetectionTimeout"] = "5"
-
+            data["AsyncAmd"] = "true"
+            data["asyncAmdStatusCallback"] = self.twilio_config.answering_machine_callback_url
+            data["AsyncAmdStatusCallbackMethod"] = "POST"
         if hasattr(self.twilio_config, "answering_machine_callback_url") is True:
-            data["StatusCallback"] = self.answering_machine_callback_url
-            data["StatusCallbackEvent"] = "answered"
+            data["StatusCallback"] = self.twilio_config.answering_machine_callback_url
+
 
         async with AsyncRequestor().get_session().post(
             f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls.json",
