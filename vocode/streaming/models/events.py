@@ -26,6 +26,12 @@ class EventType(str, Enum):
     FAX_DETECTED = "fax_detected"  # Fax machine detected
     UNKNOWN_DETECTED = "unknown_detected"  # Twilio couldn't determine
 
+    # Answering Machine Detailed Events
+    ANSWERING_MACHINE_START = "answering_machine_start"  # Start of voicemail message
+    ANSWERING_MACHINE_END_BEEP = "answering_machine_end_beep"  # Beep detected
+    ANSWERING_MACHINE_END_SILENCE = "answering_machine_end_silence"  # Silence detected
+    ANSWERING_MACHINE_END_OTHER = "answering_machine_end_other"  # Other voicemail end detection
+
     # General Call Status Events
     CALL_INITIATED = "initiated"  # Call has been created but not yet ringing
     CALL_RINGING = "ringing"  # Call is ringing
