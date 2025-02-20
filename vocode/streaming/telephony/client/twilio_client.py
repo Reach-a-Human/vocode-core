@@ -62,7 +62,7 @@ class TwilioClient(AbstractTelephonyClient):
             data["AsyncAmd"] = "true"
             data["AsyncAmdStatusCallback"] = self.twilio_config.answering_machine_callback_url
             data["AsyncAmdStatusCallbackMethod"] = "POST"
-
+            data["MachineDetectionSpeechThreshold"] = "2000"
         if hasattr(self.twilio_config, "answering_machine_callback_url") is True:
             data["StatusCallback"] = self.twilio_config.answering_machine_callback_url
 
