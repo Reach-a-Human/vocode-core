@@ -42,8 +42,8 @@ class TwilioClient(AbstractTelephonyClient):
         conversation_id: str,
         to_phone: str,
         from_phone: str,
-        record: bool = False,  # currently no-op
-        digits: Optional[str] = None,  # currently no-op
+        record: bool = False,
+        digits: Optional[str] = None,
         telephony_params: Optional[Dict[str, str]] = None,
     ) -> str:
         data = {
@@ -52,6 +52,35 @@ class TwilioClient(AbstractTelephonyClient):
             "From": f"+{from_phone}",
             **(telephony_params or {}),
         }
+
+        # Enable call recording if requested
+        if record:
+            data["Record"] = "true"
+            
+            # Set recording parameters - ensure URL has protocol
+            logger.info(f"Original base_url: {self.base_url}")
+            callback_url = self.base_url
+            
+            # Explicitly check for protocol and add if missing
+            if not callback_url.startswith('http://') and not callback_url.startswith('https://'):
+                callback_url = f"https://{callback_url}"
+                logger.info(f"Added https:// protocol. Updated callback_url: {callback_url}")
+            
+            # Ensure the URL doesn't end with a slash before adding /recordings
+            if callback_url.endswith('/'):
+                callback_url = callback_url[:-1]
+            
+            # Create the full recording callback URL
+            recording_callback = f"{callback_url}/twilio-recordings"
+            
+            # Log the URL we're about to use
+            logger.info(f"Final recording callback URL: {recording_callback}")
+            
+            # Set the URL in the Twilio API request
+            data["RecordingStatusCallback"] = recording_callback
+            data["RecordingStatusCallbackMethod"] = "POST"
+            
+            logger.info(f"Enabled call recording with callback URL: {recording_callback}")
 
         if digits:
             data["SendDigits"] = digits
@@ -63,15 +92,11 @@ class TwilioClient(AbstractTelephonyClient):
             data["AsyncAmdStatusCallback"] = self.twilio_config.answering_machine_callback_url
             data["AsyncAmdStatusCallbackMethod"] = "POST"
             data["MachineDetectionSpeechThreshold"] = "2000"
-            logger.info("Added AMD callback configuration", extra={
-                "amd_callback_url": self.twilio_config.answering_machine_callback_url
-            })
+            logger.info(f"Added AMD callback configuration: {self.twilio_config.answering_machine_callback_url}")
 
         # Add status callback configuration if URL is provided
         if hasattr(self.twilio_config, "status_callback_url"):
-            logger.info("Adding status callback configuration", extra={
-                "status_callback_url": self.twilio_config.status_callback_url
-            })
+            logger.info(f"Adding status callback configuration: {self.twilio_config.status_callback_url}")
             data["StatusCallback"] = self.twilio_config.status_callback_url
             data["StatusCallbackMethod"] = "POST"
             data["StatusCallbackEvent"] = [
@@ -87,11 +112,7 @@ class TwilioClient(AbstractTelephonyClient):
         else:
             logger.warning("No status_callback_url found in TwilioConfig")
 
-        logger.info("Final Twilio call params:", extra={
-            "data": data,
-            "has_status_callback": "StatusCallback" in data,
-            "has_amd_callback": "AsyncAmdStatusCallback" in data
-        })
+        logger.info(f"Final Twilio call params: {data}")
         
         async with AsyncRequestor().get_session().post(
             f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls.json",
