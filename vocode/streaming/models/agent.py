@@ -58,6 +58,7 @@ class AgentType(str, Enum):
     LANGCHAIN = "agent_langchain"
 
 
+
 class FillerAudioConfig(BaseModel):
     silence_threshold_seconds: float = FILLER_AUDIO_DEFAULT_SILENCE_THRESHOLD_SECONDS
     use_phrases: bool = True

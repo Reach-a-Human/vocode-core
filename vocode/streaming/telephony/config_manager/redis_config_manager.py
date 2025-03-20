@@ -22,7 +22,8 @@ class RedisConfigManager(BaseConfigManager):
 
     async def get_config(self, conversation_id) -> Optional[BaseCallConfig]:
         logger.debug(f"Getting config for {conversation_id}")
-        raw_config = await self.redis.get(conversation_id)  # type: ignore
+        raw_config = await self.redis.get(conversation_id)
+        print(f"raw_config: {raw_config}")
         if raw_config:
             return BaseCallConfig.parse_raw(raw_config)
         return None

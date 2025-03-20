@@ -63,10 +63,36 @@ class TwilioClient(AbstractTelephonyClient):
             data["AsyncAmdStatusCallback"] = self.twilio_config.answering_machine_callback_url
             data["AsyncAmdStatusCallbackMethod"] = "POST"
             data["MachineDetectionSpeechThreshold"] = "2000"
-        if hasattr(self.twilio_config, "answering_machine_callback_url") is True:
-            data["StatusCallback"] = self.twilio_config.answering_machine_callback_url
+            logger.info("Added AMD callback configuration", extra={
+                "amd_callback_url": self.twilio_config.answering_machine_callback_url
+            })
 
+        # Add status callback configuration if URL is provided
+        if hasattr(self.twilio_config, "status_callback_url"):
+            logger.info("Adding status callback configuration", extra={
+                "status_callback_url": self.twilio_config.status_callback_url
+            })
+            data["StatusCallback"] = self.twilio_config.status_callback_url
+            data["StatusCallbackMethod"] = "POST"
+            data["StatusCallbackEvent"] = [
+                "initiated",
+                "ringing",
+                "answered",
+                "completed",
+                "busy",
+                "no-answer",
+                "canceled",
+                "failed"
+            ]
+        else:
+            logger.warning("No status_callback_url found in TwilioConfig")
 
+        logger.info("Final Twilio call params:", extra={
+            "data": data,
+            "has_status_callback": "StatusCallback" in data,
+            "has_amd_callback": "AsyncAmdStatusCallback" in data
+        })
+        
         async with AsyncRequestor().get_session().post(
             f"https://api.twilio.com/2010-04-01/Accounts/{self.twilio_config.account_sid}/Calls.json",
             auth=self.auth,
