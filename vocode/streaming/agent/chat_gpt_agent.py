@@ -155,10 +155,10 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfigType]):
 
     async def _create_openai_stream(self, chat_parameters: Dict[str, Any]) -> AsyncGenerator:
         if self.agent_config.llm_fallback is not None and self.openai_client.max_retries == 0:
-            logger.info(f"THESE LOGS ARE BEING PRINTED: {chat_parameters}")
+            print(f"EXTRACT THESE: {chat_parameters}")
             stream = await self._create_openai_stream_with_fallback(chat_parameters)
         else:
-            logger.info(f"THESE LOGS ARE BEING PRINTED: {chat_parameters}")
+            print(f"EXTRACT THESE: {chat_parameters}")
             stream = await self.openai_client.chat.completions.create(**chat_parameters)
         return stream
 
