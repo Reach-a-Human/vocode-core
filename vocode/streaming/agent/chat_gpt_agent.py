@@ -155,11 +155,43 @@ class ChatGPTAgent(RespondAgent[ChatGPTAgentConfigType]):
 
     async def _create_openai_stream(self, chat_parameters: Dict[str, Any]) -> AsyncGenerator:
         if self.agent_config.llm_fallback is not None and self.openai_client.max_retries == 0:
-            print(f"EXTRACT THESE: {chat_parameters}")
+            logger.info(f"TO LLM Fallback: {chat_parameters}")
             stream = await self._create_openai_stream_with_fallback(chat_parameters)
         else:
-            print(f"EXTRACT THESE: {chat_parameters}")
+            logger.info(f"TO LLM No Fallback: {chat_parameters}")
+            # Estimate tokens for metrics tracking
+            try:
+                from cbot.metrics import track_llm_request
+                model_name = chat_parameters.get("model", self.agent_config.model_name)
+                messages = chat_parameters.get("messages", [])
+                functions = chat_parameters.get("functions", [])
+                
+                from vocode.streaming.agent.token_utils import num_tokens_from_messages, num_tokens_from_functions
+                prompt_tokens = num_tokens_from_messages(messages, model_name) + num_tokens_from_functions(functions, model_name)
+                
+                # Extract prompt content for easier debugging
+                if len(messages) > 0 and isinstance(messages[-1], dict) and "content" in messages[-1]:
+                    last_content = messages[-1]["content"]
+                    track_llm_request(prompt_text=last_content)
+                    logger.info(f"LLM Request - Model: {model_name}, Estimated Prompt Tokens: {prompt_tokens}")
+            except Exception as e:
+                logger.warning(f"Failed to track LLM metrics: {e}")
+                
             stream = await self.openai_client.chat.completions.create(**chat_parameters)
+            
+            # Track completion tokens if available
+            try:
+                if hasattr(stream, "usage") and stream.usage is not None:
+                    from cbot.metrics import LLM_TOKENS_PROMPT, LLM_TOKENS_COMPLETION
+                    if hasattr(stream.usage, "prompt_tokens"):
+                        LLM_TOKENS_PROMPT.inc(stream.usage.prompt_tokens)
+                        logger.info(f"LLM Prompt Tokens: {stream.usage.prompt_tokens}")
+                    if hasattr(stream.usage, "completion_tokens"):
+                        LLM_TOKENS_COMPLETION.inc(stream.usage.completion_tokens)
+                        logger.info(f"LLM Completion Tokens: {stream.usage.completion_tokens}")
+            except Exception as e:
+                logger.warning(f"Failed to track LLM token usage: {e}")
+                
         return stream
 
     def should_backchannel(self, human_input: str) -> bool:
